@@ -1,52 +1,58 @@
 # SimpleMenu
 
-SimpleMenu es una librería para Arduino que facilita la creación de menús interactivos en pantallas LCD 20x4 con conexión I2C, usando un encoder rotativo con botón para navegación y selección.
+**SimpleMenu** es una librería ligera para Arduino que facilita la creación de menús interactivos en pantallas LCD I2C de 20x4 líneas usando un encoder rotatorio con botón integrado.  
+Ideal para proyectos que requieren interfaces de usuario compactas y fáciles de usar, como controles de sistemas embebidos.
 
 ## Características
 
-- Navegación sencilla y fluida con encoder rotativo.
-- Soporte para submenús y acciones asociadas a cada opción.
-- Manejo eficiente de la pantalla LCD sin parpadeos innecesarios.
-- Diseño modular para fácil integración en cualquier proyecto Arduino.
-- Ejemplos incluidos para rápida implementación.
-
-## Requisitos
-
-- Arduino IDE (compatible con versiones recientes).
-- Librería `LiquidCrystal_I2C`.
-- Librería `Encoder`.
+- Soporta menús jerárquicos con submenús.
+- Navegación sencilla con encoder rotatorio.
+- Selección de opciones con botón integrado.
+- Compatible con pantallas LCD 20x4 I2C (LiquidCrystal_I2C).
+- Código limpio y fácil de integrar en cualquier proyecto.
+- Ejemplo de uso incluido.
 
 ## Instalación
 
-1. Descarga o clona este repositorio.
-2. Copia la carpeta `SimpleMenu` en tu carpeta de librerías de Arduino, normalmente:
-   - Windows: `Documentos\Arduino\libraries\`
-   - macOS/Linux: `~/Arduino/libraries/`
-3. Reinicia el IDE Arduino.
-4. Encuentra los ejemplos en: **Archivo > Ejemplos > SimpleMenu**.
+1. Copia la carpeta `SimpleMenu` en la carpeta `libraries` de tu instalación de Arduino IDE.
+2. Reinicia Arduino IDE.
+3. Encuentra el ejemplo en `Archivo > Ejemplos > SimpleMenu > SimpleMenuExample`.
 
-## Uso básico
+## Uso Básico
 
 ```cpp
-#include <SimpleMenu.h>
+#include <Wire.h>
 #include <LiquidCrystal_I2C.h>
 #include <Encoder.h>
+#include <SimpleMenu.h>
 
-// Configura LCD y encoder
 LiquidCrystal_I2C lcd(0x27, 20, 4);
-Encoder myEnc(4, 5);
+Encoder encoder(4, 5);
 MenuSystem menu(lcd, 6);
 
-// Define menú con opciones y submenús usando std::vector<MenuItem>
-// Inicializa el menú con menu.setRootMenu(&menuPrincipal);
+void accion1() {
+  lcd.clear();
+  lcd.print("Accion 1");
+}
+
+std::vector<MenuItem> menuRoot = {
+  { "Opcion 1", accion1, {} },
+  { "Salir", nullptr, {} }
+};
 
 void setup() {
+  pinMode(6, INPUT_PULLUP);
   lcd.init();
   lcd.backlight();
-  menu.setRootMenu(&menuPrincipal);
-  // Resto de configuración...
+
+  menu.setRootMenu(&menuRoot);
+  menu.resetPosition();
+  menu.setOldPosition(0);
+  menu.showMenu();
 }
 
 void loop() {
-  // Lee encoder, botón y actualiza menú con menu.update()
+  long pos = encoder.read() / 5;
+  bool btn = (digitalRead(6) == LOW);
+  menu.update(pos, btn);
 }
