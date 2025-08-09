@@ -23,36 +23,71 @@ Ideal para proyectos que requieren interfaces de usuario compactas y fáciles de
 ```cpp
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
-#include <Encoder.h>
-#include <SimpleMenu.h>
+#include "SimpleMenu.h"
 
+// Inicializar LCD I2C (0x27, 20x4)
 LiquidCrystal_I2C lcd(0x27, 20, 4);
-Encoder encoder(4, 5);
-MenuSystem menu(lcd, 6);
 
+// Funciones para las opciones del menú
 void accion1() {
   lcd.clear();
-  lcd.print("Accion 1");
+  lcd.print("Accion 1 ejecutada");
 }
 
+void accion2() {
+  lcd.clear();
+  lcd.print("Accion 2 ejecutada");
+}
+
+void submenuOpcion1() {
+  lcd.clear();
+  lcd.print("Submenu opcion 1");
+}
+
+void submenuOpcion2() {
+  lcd.clear();
+  lcd.print("Submenu opcion 2");
+}
+
+void salir() {
+  lcd.clear();
+  lcd.print("Saliendo...");
+}
+
+// Definición del menú
 std::vector<MenuItem> menuRoot = {
-  { "Opcion 1", accion1, {} },
-  { "Salir", nullptr, {} }
+  { "Accion 1", accion1, {} },
+  { "Accion 2", accion2, {} },
+  { "Submenu", nullptr, {
+      { "Subopcion 1", submenuOpcion1, {} },
+      { "Subopcion 2", submenuOpcion2, {} },
+      { "Volver", nullptr, {} }
+    }
+  },
+  { "Salir", salir, {} }
 };
 
+// Pines botones: UP, DOWN, SELECT
+SimpleMenu menu(lcd, 4, 5, 6);
+
+// Estado general mostrado cuando no se está en menú
+void mostrarEstadoGeneral() {
+  lcd.clear();
+  lcd.print("Sistema Operativo");
+  lcd.setCursor(0,1);
+  lcd.print("Menu listo...");
+  lcd.setCursor(0,2);
+  lcd.print("Use botones");
+  lcd.setCursor(0,3);
+  lcd.print("para navegar");
+}
+
 void setup() {
-  pinMode(6, INPUT_PULLUP);
   lcd.init();
   lcd.backlight();
-
-  menu.setRootMenu(&menuRoot);
-  menu.resetPosition();
-  menu.setOldPosition(0);
-  menu.showMenu();
+  menu.begin(&menuRoot, mostrarEstadoGeneral);
 }
 
 void loop() {
-  long pos = encoder.read() / 5;
-  bool btn = (digitalRead(6) == LOW);
-  menu.update(pos, btn);
+  menu.update();
 }
